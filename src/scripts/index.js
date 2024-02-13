@@ -1,5 +1,7 @@
 import '../pages/index.css';
 import {initialCards} from './cards.js';
+import {createCard, addCard} from '../components/card.js';
+import {openModal} from '../components/modal.js'
 
 const cardTemplate = document.querySelector('#card-template').content;
 const cardList = document.querySelector('.places__list');
@@ -8,102 +10,31 @@ const addButton = document.querySelector('.profile__add-button');
 const popupNewCard = document.querySelector('.popup_type_new-card');
 const popupViewImage = document.querySelector('.popup_type_image');
 const popupEditProfile = document.querySelector('.popup_type_edit');
-const profileTitle = document.querySelector('.profile__title');
-const profileDescription = document.querySelector('.profile__description');
+const profileObj = document.querySelector('.profile__info');
 const editProfileForm = document.forms.edit_profile;
 const newPlaceForm = document.forms.new_place;
 
-editButton.addEventListener('click', (evt) => {openModal(evt, popupEditProfile)});
-addButton.addEventListener('click', (evt) => {openModal(evt, popupNewCard)});
+editButton.addEventListener('click', (evt) => {openModal(evt, popupEditProfile, editProfileForm, handleFormSubmit, profileObj)});
+addButton.addEventListener('click', (evt) => {openModal(evt, popupNewCard, newPlaceForm, handleFormSubmit)});
 
-
-function editProfile(){
-  if(profileTitle.textContent !== '' || profileDescription.textContent !== ''){
-    editProfileForm.elements.name.value = profileTitle.textContent;
-    editProfileForm.elements.description.value = profileDescription.textContent;
-  }
-}
-
-function handleFormSubmit(evt) {
+function handleFormSubmit(evt){
   evt.preventDefault();
-  profileTitle.textContent = editProfileForm.elements.name.value;
-  profileDescription.textContent = editProfileForm.elements.description.value;
-  this.classList.remove('popup_is-opened');
-  this.removeEventListener('submit', handleFormSubmit);
-}
-
-function showImage(evt, modal){
-  // console.log(evt, modal);
-  const imagePopup = modal.querySelector('.popup__image');
-  const descriptionPopup = modal.querySelector('.popup__caption');
-  const image = evt.querySelector('.card__image');
-  const description = evt.querySelector('.card__title');
-  imagePopup.src = image.src;
-  imagePopup.alt = image.alt;
-  descriptionPopup.textContent = description.textContent;
-}
-
-function openModal(evt, modal){
-  modal.classList.add('popup_is-opened');
-  bindCloseModal(modal);
-  if(modal.classList.contains('popup_type_edit')){
-    editProfile();
-    modal.addEventListener('submit', handleFormSubmit);
-  }else if(modal.classList.contains('popup_type_new-card')){
-    modal.addEventListener('submit', createCard);
-  }else if(modal.classList.contains('popup_type_image')){
-    showImage(evt, modal)
-  };
-}
-
-function bindCloseModal(modal){
-  const button = modal.querySelector('.popup__close');
-  function closeModal(evt){
-    if(evt.target.classList.contains('popup__close') || evt.target.classList.contains('popup') || evt.key === 'Escape'){
-      modal.classList.remove('popup_is-opened');
-      button.removeEventListener('click', closeModal);
-      document.removeEventListener('click', closeModal);
-      document.removeEventListener('keydown', closeModal);
-    }
+  const openedModal = document.querySelector('.popup_is-opened');
+  if(evt.target.name === 'edit_profile'){
+    const profileTitle = profileObj.querySelector('.profile__title');
+    const profileDescription = profileObj.querySelector('.profile__description');
+    profileTitle.textContent = editProfileForm.elements.profile_name.value;
+    profileDescription.textContent = editProfileForm.elements.description.value;
+  }else if(evt.target.name === 'new_place'){
+    addCard(cardTemplate, evt.target, cardList, openModal);
   }
-  button.addEventListener('click', closeModal);
-  document.addEventListener('click', closeModal);
-  document.addEventListener('keydown', closeModal);
-}
-
-function createCard(evt){
-  evt.preventDefault();
-  let name = newPlaceForm.elements.place_name.value,
-      link = newPlaceForm.elements.link.value;
-  cardList.prepend(addCard(link, name, delCard, likeCard, openModal));
-  newPlaceForm.reset();
-  this.classList.remove('popup_is-opened');
-  this.removeEventListener('submit', createCard);
-}
-
-function addCard(link, name, delCard, likeCard, openModal){
-    const cardElement = cardTemplate.querySelector('.card').cloneNode(true);
-    const cardImage = cardElement.querySelector('.card__image');
-    cardImage.src = link;
-    cardImage.alt = name;
-    cardElement.querySelector('.card__title').textContent = name;
-    cardElement.querySelector('.card__delete-button').addEventListener('click', () => delCard(cardElement));
-    cardElement.querySelector('.card__like-button').addEventListener('click', likeCard);
-    cardImage.addEventListener('click', () => {openModal(cardElement, popupViewImage)});
-    return cardElement;
-}
-
-function likeCard(){
-  this.classList.toggle('card__like-button_is-active');
-}
-
-function delCard(cardItem){
-  cardItem.remove();
+  openedModal.classList.remove('popup_is-opened');
+  evt.target.removeEventListener('submit', handleFormSubmit);
 }
 
 function showCards(data){
   data.forEach(element => {
-    cardList.append(addCard(element.link, element.name, delCard, likeCard, openModal));
+    cardList.append(createCard(cardTemplate, element.link, element.name, openModal, popupViewImage));
   });
 }
 
