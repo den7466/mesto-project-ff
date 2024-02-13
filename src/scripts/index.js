@@ -1,6 +1,8 @@
 import '../pages/index.css';
 import {initialCards} from './cards.js';
 
+const cardTemplate = document.querySelector('#card-template').content;
+const cardList = document.querySelector('.places__list');
 const editButton = document.querySelector('.profile__edit-button');
 const addButton = document.querySelector('.profile__add-button');
 const popupNewCard = document.querySelector('.popup_type_new-card');
@@ -11,16 +13,8 @@ const profileDescription = document.querySelector('.profile__description');
 const editProfileForm = document.forms.edit_profile;
 const newPlaceForm = document.forms.new_place;
 
-// popUp
-function initButton(button, action, f, modal){
-  button.addEventListener(action, (evt) => {f(evt, modal)});
-}
-
-initButton(editButton, 'click', openModal, popupEditProfile);
-initButton(addButton, 'click', openModal, popupNewCard);
-
-// editButton.addEventListener('click', (evt) => {openModal(evt, popupEditProfile)});
-// addButton.addEventListener('click', (evt) => {openModal(evt, popupNewCard)});
+editButton.addEventListener('click', (evt) => {openModal(evt, popupEditProfile)});
+addButton.addEventListener('click', (evt) => {openModal(evt, popupNewCard)});
 
 
 function editProfile(){
@@ -87,13 +81,6 @@ function createCard(evt){
   this.removeEventListener('submit', createCard);
 }
 
-// @todo: Темплейт карточки
-const cardTemplate = document.querySelector('#card-template').content;
-
-// @todo: DOM узлы
-const cardList = document.querySelector('.places__list');
-
-// @todo: Функция создания карточки
 function addCard(link, name, delCard, likeCard, openModal){
     const cardElement = cardTemplate.querySelector('.card').cloneNode(true);
     const cardImage = cardElement.querySelector('.card__image');
@@ -110,17 +97,14 @@ function likeCard(){
   this.classList.toggle('card__like-button_is-active');
 }
 
-// @todo: Функция удаления карточки
 function delCard(cardItem){
   cardItem.remove();
 }
 
-// @todo: Вывести карточки на страницу
 function showCards(data){
   data.forEach(element => {
     cardList.append(addCard(element.link, element.name, delCard, likeCard, openModal));
   });
 }
-
 
 showCards(initialCards);
