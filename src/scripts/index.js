@@ -1,6 +1,6 @@
 import '../pages/index.css';
 import {initialCards} from './cards.js';
-import {createCard, addCard} from '../components/card.js';
+import {addCard, showCards} from '../components/card.js';
 import {openModal} from '../components/modal.js'
 
 const cardTemplate = document.querySelector('#card-template').content;
@@ -32,10 +32,4 @@ function handleFormSubmit(evt){
   evt.target.removeEventListener('submit', handleFormSubmit);
 }
 
-function showCards(data){
-  data.forEach(element => {
-    cardList.append(createCard(cardTemplate, element.link, element.name, openModal, popupViewImage));
-  });
-}
-
-showCards(initialCards);
+showCards(cardTemplate, initialCards, cardList, openModal, popupViewImage);

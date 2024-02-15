@@ -1,3 +1,11 @@
+/*
+** Функция открытия модального окна openModal()
+** Параметры: evt - объект эвент
+**            modal - объект модального окна
+**            form - объект формы
+**            handleFormSubmit - функция обработчик submit
+**            profile - объект профиля
+*/
 function openModal(evt, modal, form, handleFormSubmit, profile){
   modal.classList.add('popup_is-opened');
   modal.addEventListener('click', closeModal);
@@ -12,15 +20,24 @@ function openModal(evt, modal, form, handleFormSubmit, profile){
   }
 }
 
+/*
+** Функция закрытия модального окна closeModal()
+** Параметры: evt - объект эвент
+*/
 function closeModal(evt){
   if(evt.target.classList.contains('popup__close') || evt.target.classList.contains('popup') || evt.key === 'Escape'){
     const openedModal = document.querySelector('.popup_is-opened');
     openedModal.classList.remove('popup_is-opened');
-    this.removeEventListener('click', closeModal);
+    evt.currentTarget.removeEventListener('click', closeModal);
     document.removeEventListener('keydown', closeModal);
   }
 }
 
+/*
+** Функция отображения данных профиля в форме showProfile()
+** Параметры: form - объект формы
+**            profile - объект профиля
+*/
 function showProfile(form, profile){
   const profileTitle = profile.querySelector('.profile__title');
   const profileDescription = profile.querySelector('.profile__description');
@@ -30,6 +47,11 @@ function showProfile(form, profile){
   }
 }
 
+/*
+** Функция отображения изображения карточки в модальном окне showImage()
+** Параметры: evt - объект эвент
+**            modal - объект модального окна
+*/
 function showImage(evt, modal){
     const imagePopup = modal.querySelector('.popup__image');
     const descriptionPopup = modal.querySelector('.popup__caption');
