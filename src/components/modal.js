@@ -52,6 +52,7 @@ function showProfile(form, profile){
 ** Параметры: evt - объект эвент
 **            modal - объект модального окна
 */
+
 function showImage(evt, modal){
     const imagePopup = modal.querySelector('.popup__image');
     const descriptionPopup = modal.querySelector('.popup__caption');
