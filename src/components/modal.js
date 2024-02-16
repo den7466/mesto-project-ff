@@ -2,63 +2,40 @@
 ** Функция открытия модального окна openModal()
 ** Параметры: evt - объект эвент
 **            modal - объект модального окна
-**            form - объект формы
-**            handleFormSubmit - функция обработчик submit
-**            profile - объект профиля
 */
-function openModal(evt, modal, form, handleFormSubmit, profile){
+function openModal(evt, modal){
   modal.classList.add('popup_is-opened');
-  modal.addEventListener('click', closeModal);
-  document.addEventListener('keydown', closeModal);
-  if(modal.classList.contains('popup_type_image')){
-    showImage(evt, modal);
-  }else{
-    form.addEventListener('submit', handleFormSubmit);
-  }
-  if(modal.classList.contains('popup_type_edit')){
-    showProfile(form, profile);
-  }
+  document.addEventListener('keydown', (evt) => closeWithEsc(evt, modal));
 }
 
 /*
 ** Функция закрытия модального окна closeModal()
 ** Параметры: evt - объект эвент
+**            modal - объект модального окна
 */
-function closeModal(evt){
-  if(evt.target.classList.contains('popup__close') || evt.target.classList.contains('popup') || evt.key === 'Escape'){
-    const openedModal = document.querySelector('.popup_is-opened');
-    openedModal.classList.remove('popup_is-opened');
-    evt.currentTarget.removeEventListener('click', closeModal);
-    document.removeEventListener('keydown', closeModal);
-  }
+function closeModal(evt, modal){
+  document.removeEventListener('keydown', closeWithEsc);
+  modal.classList.remove('popup_is-opened');
 }
 
 /*
-** Функция отображения данных профиля в форме showProfile()
-** Параметры: form - объект формы
-**            profile - объект профиля
-*/
-function showProfile(form, profile){
-  const profileTitle = profile.querySelector('.profile__title');
-  const profileDescription = profile.querySelector('.profile__description');
-  if(profileTitle.textContent !== '' || profileDescription.textContent !== ''){
-    form.elements.profile_name.value = profileTitle.textContent;
-    form.elements.description.value = profileDescription.textContent;
-  }
-}
-
-/*
-** Функция отображения изображения карточки в модальном окне showImage()
+** Функция закрытия модального окна по нажатию на оверлей closeWithOverlay()
 ** Параметры: evt - объект эвент
 **            modal - объект модального окна
 */
+function closeWithOverlay(evt, modal){
+  if(evt.target.classList.contains('popup'))
+    closeModal(evt, modal);
+}
 
-function showImage(evt, modal){
-    const imagePopup = modal.querySelector('.popup__image');
-    const descriptionPopup = modal.querySelector('.popup__caption');
-    imagePopup.src = evt.currentTarget.src;
-    imagePopup.alt = evt.currentTarget.alt;
-    descriptionPopup.textContent = evt.currentTarget.alt;
-  }
+/*
+** Функция закрытия модального окна по нажатию на Escape closeWithEsc()
+** Параметры: evt - объект эвент
+**            modal - объект модального окна
+*/
+function closeWithEsc(evt, modal){
+  if(evt.key === 'Escape')
+    closeModal(evt, modal);
+}
 
-export {openModal};
+export {openModal, closeModal, closeWithOverlay};
