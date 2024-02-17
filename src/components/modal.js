@@ -3,9 +3,9 @@
 ** Параметры: evt - объект эвент
 **            modal - объект модального окна
 */
-function openModal(evt, modal){
+function openModal(modal){
   modal.classList.add('popup_is-opened');
-  document.addEventListener('keydown', (evt) => closeWithEsc(evt, modal));
+  document.addEventListener('keydown', closeWithEsc);
 }
 
 /*
@@ -13,7 +13,7 @@ function openModal(evt, modal){
 ** Параметры: evt - объект эвент
 **            modal - объект модального окна
 */
-function closeModal(evt, modal){
+function closeModal(modal){
   document.removeEventListener('keydown', closeWithEsc);
   modal.classList.remove('popup_is-opened');
 }
@@ -25,7 +25,7 @@ function closeModal(evt, modal){
 */
 function closeWithOverlay(evt, modal){
   if(evt.target.classList.contains('popup'))
-    closeModal(evt, modal);
+    closeModal(modal);
 }
 
 /*
@@ -33,9 +33,11 @@ function closeWithOverlay(evt, modal){
 ** Параметры: evt - объект эвент
 **            modal - объект модального окна
 */
-function closeWithEsc(evt, modal){
-  if(evt.key === 'Escape')
-    closeModal(evt, modal);
+function closeWithEsc(evt){
+  if(evt.key === 'Escape'){
+    const openedModal = document.querySelector('.popup_is-opened');
+    closeModal(openedModal);
+  }
 }
 
 export {openModal, closeModal, closeWithOverlay};

@@ -19,10 +19,14 @@ const profileTitle = document.querySelector('.profile__title');
 const profileDescription = document.querySelector('.profile__description');
 const imageViewImage = popupViewImage.querySelector('.popup__image');
 const descriptionViewImage = popupViewImage.querySelector('.popup__caption');
+const inputNameProfile = formEditProfile.elements.profile_name;
+const inputDescriptionProfile = formEditProfile.elements.description;
+const inputNameCard = formNewPlace.elements.place_name;
+const inputLinkCard = formNewPlace.elements.link;
 
-buttonCloseEditProfile.addEventListener('click', (evt) => closeModal(evt, popupEditProfile));
-buttonCloseNewPlace.addEventListener('click', (evt) => closeModal(evt, popupNewCard));
-buttonCloseViewImage.addEventListener('click', (evt) => closeModal(evt, popupViewImage));
+buttonCloseEditProfile.addEventListener('click', () => closeModal(popupEditProfile));
+buttonCloseNewPlace.addEventListener('click', () => closeModal(popupNewCard));
+buttonCloseViewImage.addEventListener('click', () => closeModal(popupViewImage));
 
 popupEditProfile.addEventListener('click', (evt) => closeWithOverlay(evt, popupEditProfile));
 popupNewCard.addEventListener('click', (evt) => closeWithOverlay(evt, popupNewCard));
@@ -31,9 +35,9 @@ popupViewImage.addEventListener('click', (evt) => closeWithOverlay(evt, popupVie
 formEditProfile.addEventListener('submit', handleEditProfileFormSubmit);
 formNewPlace.addEventListener('submit', handleNewCardFormSubmit);
 
-buttonEdit.addEventListener('click', (evt) => openModal(evt, popupEditProfile));
+buttonEdit.addEventListener('click', () => openModal(popupEditProfile));
 buttonEdit.addEventListener('click', showDataInEditProfileModal);
-buttonAdd.addEventListener('click', (evt) => openModal(evt, popupNewCard));
+buttonAdd.addEventListener('click', () => openModal(popupNewCard));
 
 /*
 ** Функция-обработчик кнопки добавления новой карточки handleNewCardFormSubmit()
@@ -41,9 +45,9 @@ buttonAdd.addEventListener('click', (evt) => openModal(evt, popupNewCard));
 */
 function handleNewCardFormSubmit(evt){
   evt.preventDefault();
-  addCard();
+  addCard(inputNameCard, inputLinkCard);
   evt.currentTarget.reset();
-  closeModal(evt, popupNewCard);
+  closeModal(popupNewCard);
 }
 
 /*
@@ -52,9 +56,9 @@ function handleNewCardFormSubmit(evt){
 */
 function handleEditProfileFormSubmit(evt){
   evt.preventDefault();
-  profileTitle.textContent = formEditProfile.elements.profile_name.value;
-  profileDescription.textContent = formEditProfile.elements.description.value;
-  closeModal(evt, popupEditProfile);
+  profileTitle.textContent = inputNameProfile.value;
+  profileDescription.textContent = inputDescriptionProfile.value;
+  closeModal(popupEditProfile);
 }
 
 /*
@@ -63,7 +67,7 @@ function handleEditProfileFormSubmit(evt){
 */
 function showDataInEditProfileModal(){
   if(popupEditProfile.classList.contains('popup_is-opened'))
-   showProfile(formEditProfile, profileTitle, profileDescription)
+   showProfile(inputNameProfile, inputDescriptionProfile, profileTitle, profileDescription)
 }
 
 /*
@@ -81,7 +85,7 @@ function showCards(data){
 ** Параметры: evt - объект эвент
 */
 function openImageModal(evt){
-  openModal(evt, popupViewImage);
+  openModal(popupViewImage);
   showImage(imageViewImage, descriptionViewImage, evt.currentTarget);
 }
 
@@ -89,10 +93,8 @@ function openImageModal(evt){
 ** Функция добавления новой карточки addCard()
 ** Параметры: нет
 */
-function addCard(){
-  const name = formNewPlace.elements.place_name.value;
-  const link = formNewPlace.elements.link.value;
-  cardList.prepend(createCard(cardTemplate, link, name, openImageModal));
+function addCard(name, link){
+  cardList.prepend(createCard(cardTemplate, link.value, name.value, openImageModal));
 }
 
 /*
@@ -101,10 +103,10 @@ function addCard(){
 **            profileTitle - имя профиля
 **            profileDescription - описание профиля
 */
-function showProfile(form, profileTitle, profileDescription){
+function showProfile(inputNameProfile, inputDescriptionProfile, profileTitle, profileDescription){
   if(profileTitle.textContent !== '' || profileDescription.textContent !== ''){
-    form.elements.profile_name.value = profileTitle.textContent;
-    form.elements.description.value = profileDescription.textContent;
+    inputNameProfile.value = profileTitle.textContent;
+    inputDescriptionProfile.value = profileDescription.textContent;
   }
 }
 
