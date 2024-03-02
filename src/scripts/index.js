@@ -1,7 +1,8 @@
 import '../pages/index.css';
 import {initialCards} from './cards.js';
 import {createCard} from '../components/card.js';
-import {openModal, closeModal, closeWithOverlay} from '../components/modal.js'
+import {openModal, closeModal, closeWithOverlay} from '../components/modal.js';
+import {clearValidation, enableValidation} from '../components/validation.js';
 
 const cardTemplate = document.querySelector('#card-template').content;
 const cardList = document.querySelector('.places__list');
@@ -123,3 +124,12 @@ function showImage(imagePopup, descriptionPopup, imageTarget){
 }
 
 showCards(initialCards);
+
+enableValidation({
+  formSelector: '.popup__form',
+  inputSelector: '.popup__input',
+  submitButtonSelector: '.popup__button',
+  inactiveButtonClass: 'popup__button_disabled',
+  inputErrorClass: 'popup__input_type_error',
+  errorClass: 'popup__error_visible'
+});
