@@ -13,9 +13,15 @@ function hideInputError(formElement, inputElement, inputErrorClass, errorClass){
 }
 
 function checkInputValidity(formElement, inputElement, inputErrorClass, errorClass){
-  if (!inputElement.validity.valid) {
+  if(inputElement.validity.patternMismatch){
+    inputElement.setCustomValidity(inputElement.dataset.errorMessage);
+  }else{
+    inputElement.setCustomValidity('');
+  }
+
+  if(!inputElement.validity.valid) {
     showInputError(formElement, inputElement, inputErrorClass, errorClass, inputElement.validationMessage);
-  } else {
+  }else{
     hideInputError(formElement, inputElement, inputErrorClass, errorClass);
   }
 }
@@ -27,7 +33,7 @@ function setEventListeners(formElement, inputElement, submitButtonSelector, inac
   inputList.forEach((inputElement) => {
     inputElement.addEventListener('input', function () {
       checkInputValidity(formElement, inputElement, inputErrorClass, errorClass);
-      toggleButtonState(inputList, buttonElement);
+      toggleButtonState(inputList, buttonElement, inactiveButtonClass);
     });
   });
 }
@@ -41,15 +47,20 @@ function hasInvalidInput(inputList){
 function toggleButtonState(inputList, buttonElement, inactiveButtonClass){
   if(hasInvalidInput(inputList)){
     buttonElement.disabled = true;
-    //buttonElement.classList.add(inactiveButtonClass);
+    buttonElement.classList.add(inactiveButtonClass);
   }else{
     buttonElement.disabled = false;
-    //buttonElement.classList.remove(inactiveButtonClass);
+    buttonElement.classList.remove(inactiveButtonClass);
   }
 }
 
-function clearValidation(popup, validationConfig){
-
+function clearValidation(formElement, validationConfig){
+  const inputList = Array.from(formElement.querySelectorAll(validationConfig.inputSelector));
+  const buttonElement = formElement.querySelector(validationConfig.submitButtonSelector);
+  toggleButtonState(inputList, buttonElement, validationConfig.inactiveButtonClass);
+  inputList.forEach((inputElement) => {
+    hideInputError(formElement, inputElement, validationConfig.inputErrorClass, validationConfig.errorClass);
+  });
 }
 
 /*

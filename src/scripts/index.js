@@ -38,7 +38,23 @@ formNewPlace.addEventListener('submit', handleNewCardFormSubmit);
 
 buttonEdit.addEventListener('click', () => openModal(popupEditProfile));
 buttonEdit.addEventListener('click', showDataInEditProfileModal);
+buttonEdit.addEventListener('click', () => clearValidation(formEditProfile, {
+  formSelector: '.popup__form',
+  inputSelector: '.popup__input',
+  submitButtonSelector: '.popup__button',
+  inactiveButtonClass: 'popup__button_disabled',
+  inputErrorClass: 'popup__input_type_error',
+  errorClass: 'popup__error_visible'
+}));
 buttonAdd.addEventListener('click', () => openModal(popupNewCard));
+buttonAdd.addEventListener('click', () => clearValidation(formNewPlace, {
+  formSelector: '.popup__form',
+  inputSelector: '.popup__input',
+  submitButtonSelector: '.popup__button',
+  inactiveButtonClass: 'popup__button_disabled',
+  inputErrorClass: 'popup__input_type_error',
+  errorClass: 'popup__error_visible'
+}));
 
 /*
 ** Функция-обработчик кнопки добавления новой карточки handleNewCardFormSubmit()
@@ -48,6 +64,14 @@ function handleNewCardFormSubmit(evt){
   evt.preventDefault();
   addCard(inputNameCard, inputLinkCard);
   evt.currentTarget.reset();
+  clearValidation(formNewPlace, {
+    formSelector: '.popup__form',
+    inputSelector: '.popup__input',
+    submitButtonSelector: '.popup__button',
+    inactiveButtonClass: 'popup__button_disabled',
+    inputErrorClass: 'popup__input_type_error',
+    errorClass: 'popup__error_visible'
+  });
   closeModal(popupNewCard);
 }
 
@@ -59,6 +83,14 @@ function handleEditProfileFormSubmit(evt){
   evt.preventDefault();
   profileTitle.textContent = inputNameProfile.value;
   profileDescription.textContent = inputDescriptionProfile.value;
+  clearValidation(formEditProfile, {
+    formSelector: '.popup__form',
+    inputSelector: '.popup__input',
+    submitButtonSelector: '.popup__button',
+    inactiveButtonClass: 'popup__button_disabled',
+    inputErrorClass: 'popup__input_type_error',
+    errorClass: 'popup__error_visible'
+  })
   closeModal(popupEditProfile);
 }
 

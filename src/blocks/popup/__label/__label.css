@@ -1,0 +1,9 @@
+.popup__label {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.popup__label:not(:last-of-type) {
+  margin-block-end: 10px;
+}
