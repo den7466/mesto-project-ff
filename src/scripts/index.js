@@ -17,6 +17,7 @@ const formNewPlace = document.forms.new_place;
 const buttonCloseNewPlace = popupNewCard.querySelector('.popup__close');
 const buttonCloseViewImage = popupViewImage.querySelector('.popup__close');
 const profileTitle = document.querySelector('.profile__title');
+const profileImage = document.querySelector('.profile__image');
 const profileDescription = document.querySelector('.profile__description');
 const imageViewImage = popupViewImage.querySelector('.popup__image');
 const descriptionViewImage = popupViewImage.querySelector('.popup__caption');
@@ -24,6 +25,15 @@ const inputNameProfile = formEditProfile.elements.profile_name;
 const inputDescriptionProfile = formEditProfile.elements.description;
 const inputNameCard = formNewPlace.elements.place_name;
 const inputLinkCard = formNewPlace.elements.link;
+
+const validationConfig = {
+  formSelector: '.popup__form',
+  inputSelector: '.popup__input',
+  submitButtonSelector: '.popup__button',
+  inactiveButtonClass: 'popup__button_disabled',
+  inputErrorClass: 'popup__input_type_error',
+  errorClass: 'popup__error_visible'
+};
 
 buttonCloseEditProfile.addEventListener('click', () => closeModal(popupEditProfile));
 buttonCloseNewPlace.addEventListener('click', () => closeModal(popupNewCard));
@@ -38,23 +48,9 @@ formNewPlace.addEventListener('submit', handleNewCardFormSubmit);
 
 buttonEdit.addEventListener('click', () => openModal(popupEditProfile));
 buttonEdit.addEventListener('click', showDataInEditProfileModal);
-buttonEdit.addEventListener('click', () => clearValidation(formEditProfile, {
-  formSelector: '.popup__form',
-  inputSelector: '.popup__input',
-  submitButtonSelector: '.popup__button',
-  inactiveButtonClass: 'popup__button_disabled',
-  inputErrorClass: 'popup__input_type_error',
-  errorClass: 'popup__error_visible'
-}));
+buttonEdit.addEventListener('click', () => clearValidation(formEditProfile, validationConfig));
 buttonAdd.addEventListener('click', () => openModal(popupNewCard));
-buttonAdd.addEventListener('click', () => clearValidation(formNewPlace, {
-  formSelector: '.popup__form',
-  inputSelector: '.popup__input',
-  submitButtonSelector: '.popup__button',
-  inactiveButtonClass: 'popup__button_disabled',
-  inputErrorClass: 'popup__input_type_error',
-  errorClass: 'popup__error_visible'
-}));
+buttonAdd.addEventListener('click', () => clearValidation(formNewPlace, validationConfig));
 
 /*
 ** Функция-обработчик кнопки добавления новой карточки handleNewCardFormSubmit()
@@ -64,14 +60,7 @@ function handleNewCardFormSubmit(evt){
   evt.preventDefault();
   addCard(inputNameCard, inputLinkCard);
   evt.currentTarget.reset();
-  clearValidation(formNewPlace, {
-    formSelector: '.popup__form',
-    inputSelector: '.popup__input',
-    submitButtonSelector: '.popup__button',
-    inactiveButtonClass: 'popup__button_disabled',
-    inputErrorClass: 'popup__input_type_error',
-    errorClass: 'popup__error_visible'
-  });
+  clearValidation(formNewPlace, validationConfig);
   closeModal(popupNewCard);
 }
 
@@ -81,16 +70,11 @@ function handleNewCardFormSubmit(evt){
 */
 function handleEditProfileFormSubmit(evt){
   evt.preventDefault();
-  profileTitle.textContent = inputNameProfile.value;
-  profileDescription.textContent = inputDescriptionProfile.value;
-  clearValidation(formEditProfile, {
-    formSelector: '.popup__form',
-    inputSelector: '.popup__input',
-    submitButtonSelector: '.popup__button',
-    inactiveButtonClass: 'popup__button_disabled',
-    inputErrorClass: 'popup__input_type_error',
-    errorClass: 'popup__error_visible'
-  })
+  const data = {};
+  data.name = inputNameProfile.value;
+  data.about = inputDescriptionProfile.value;
+  updateDataProfile(autorizationConfig, data);
+  clearValidation(formEditProfile, validationConfig)
   closeModal(popupEditProfile);
 }
 
@@ -137,10 +121,8 @@ function addCard(name, link){
 **            profileDescription - описание профиля
 */
 function showProfile(inputNameProfile, inputDescriptionProfile, profileTitle, profileDescription){
-  if(profileTitle.textContent !== '' || profileDescription.textContent !== ''){
-    inputNameProfile.value = profileTitle.textContent;
-    inputDescriptionProfile.value = profileDescription.textContent;
-  }
+  inputNameProfile.value = profileTitle.textContent;
+  inputDescriptionProfile.value = profileDescription.textContent;
 }
 
 /*
@@ -155,13 +137,73 @@ function showImage(imagePopup, descriptionPopup, imageTarget){
   descriptionPopup.textContent = imageTarget.alt;
 }
 
-showCards(initialCards);
+enableValidation(validationConfig);
 
-enableValidation({
-  formSelector: '.popup__form',
-  inputSelector: '.popup__input',
-  submitButtonSelector: '.popup__button',
-  inactiveButtonClass: 'popup__button_disabled',
-  inputErrorClass: 'popup__input_type_error',
-  errorClass: 'popup__error_visible'
-});
+
+
+// API
+const autorizationConfig = {
+  token: '4beae149-dbca-4748-9357-2aff8b55b5f4',
+  cohort: 'wff-cohort-8'
+};
+
+function getDataProfile(autorizationConfig){
+  return fetch(`https://nomoreparties.co/v1/${autorizationConfig.cohort}/users/me`, {
+    headers: {
+      authorization: autorizationConfig.token
+    }
+  })
+}
+
+function getDataCards(autorizationConfig){
+  return fetch(`https://nomoreparties.co/v1/${autorizationConfig.cohort}/cards`, {
+    headers: {
+      authorization: autorizationConfig.token
+    }
+  })
+}
+
+function insertDataProfile(profileTitle, profileDescription, profileImage){
+  getDataProfile(autorizationConfig)
+  .then((res) => {if(res.ok) return res.json()})
+  .then((data) => {
+    console.log(data);
+    profileTitle.textContent = data.name;
+    profileDescription.textContent = data.about;
+    profileImage.style.backgroundImage = `url(${data.avatar})`;
+  })
+  .catch((err) => console.log('Что-то пошло не так: '+err));
+}
+
+function insertDataCards(){
+  getDataCards(autorizationConfig)
+  .then((res) => {if(res.ok) return res.json()})
+  .then((data) => {
+    console.log(data);
+    showCards(data);
+  })
+  .catch((err) => console.log('Что-то пошло не так: '+err));
+}
+
+function updateDataProfile(autorizationConfig, data){
+  fetch(`https://nomoreparties.co/v1/${autorizationConfig.cohort}/users/me`, {
+    method: 'PATCH',
+    headers: {
+      authorization: autorizationConfig.token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: data.name,
+      about: data.about
+    })
+  });
+}
+
+insertDataProfile(profileTitle, profileDescription, profileImage);
+
+insertDataCards();
+
+
+
+// https://kartinki.pics/pics/uploads/posts/2022-07/1657156698_3-kartinkin-net-p-yenot-art-v-ochkakh-i-kofte-krasivo-3.jpg
+// https://kartinki.pics/pics/2320-enot-art-v-ochkah-i-kofte.html

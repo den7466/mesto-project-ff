@@ -67,10 +67,10 @@ function clearValidation(formElement, validationConfig){
 ** Функция
 ** Параметры:
 */
-function enableValidation(objSet){
-  const formList = Array.from(document.querySelectorAll(objSet.formSelector));
+function enableValidation(validationConfig){
+  const formList = Array.from(document.querySelectorAll(validationConfig.formSelector));
   formList.forEach((formElement) => {
-    setEventListeners(formElement, objSet.inputSelector, objSet.submitButtonSelector, objSet.inactiveButtonClass, objSet.inputErrorClass, objSet.errorClass);
+    setEventListeners(formElement, validationConfig.inputSelector, validationConfig.submitButtonSelector, validationConfig.inactiveButtonClass, validationConfig.inputErrorClass, validationConfig.errorClass);
   });
 }
 
