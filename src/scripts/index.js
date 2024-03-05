@@ -25,6 +25,7 @@ const inputNameProfile = formEditProfile.elements.profile_name;
 const inputDescriptionProfile = formEditProfile.elements.description;
 const inputNameCard = formNewPlace.elements.place_name;
 const inputLinkCard = formNewPlace.elements.link;
+let userId = '';
 
 const validationConfig = {
   formSelector: '.popup__form',
@@ -58,7 +59,12 @@ buttonAdd.addEventListener('click', () => clearValidation(formNewPlace, validati
 */
 function handleNewCardFormSubmit(evt){
   evt.preventDefault();
-  addCard(inputNameCard, inputLinkCard);
+  const data = {};
+  data.name = inputNameCard.value;
+  data.link = inputLinkCard.value;
+  postNewCard(autorizationConfig, data);
+  //createCard(cardTemplate, link.value, name.value, openImageModal)
+  //addCard(inputNameCard, inputLinkCard);
   evt.currentTarget.reset();
   clearValidation(formNewPlace, validationConfig);
   closeModal(popupNewCard);
@@ -93,7 +99,7 @@ function showDataInEditProfileModal(){
 */
 function showCards(data){
   data.forEach(element => {
-    cardList.append(createCard(cardTemplate, element.link, element.name, openImageModal));
+    cardList.append(createCard(cardTemplate, element.link, element.name, openImageModal, element.likes.length, userId, element.owner._id));
   });
 }
 
@@ -110,8 +116,8 @@ function openImageModal(evt){
 ** Функция добавления новой карточки addCard()
 ** Параметры: нет
 */
-function addCard(name, link){
-  cardList.prepend(createCard(cardTemplate, link.value, name.value, openImageModal));
+function addCard(name, link, likes){
+  cardList.prepend(createCard(cardTemplate, link, name, openImageModal, likes));
 }
 
 /*
@@ -144,11 +150,12 @@ enableValidation(validationConfig);
 // API
 const autorizationConfig = {
   token: '4beae149-dbca-4748-9357-2aff8b55b5f4',
-  cohort: 'wff-cohort-8'
+  cohort: 'wff-cohort-8',
+  url: 'https://nomoreparties.co/v1'
 };
 
 function getDataProfile(autorizationConfig){
-  return fetch(`https://nomoreparties.co/v1/${autorizationConfig.cohort}/users/me`, {
+  return fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/users/me`, {
     headers: {
       authorization: autorizationConfig.token
     }
@@ -156,26 +163,24 @@ function getDataProfile(autorizationConfig){
 }
 
 function getDataCards(autorizationConfig){
-  return fetch(`https://nomoreparties.co/v1/${autorizationConfig.cohort}/cards`, {
+  return fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/cards`, {
     headers: {
       authorization: autorizationConfig.token
     }
   })
 }
 
-function insertDataProfile(profileTitle, profileDescription, profileImage){
+function initialDataProfile(){
   getDataProfile(autorizationConfig)
   .then((res) => {if(res.ok) return res.json()})
   .then((data) => {
     console.log(data);
-    profileTitle.textContent = data.name;
-    profileDescription.textContent = data.about;
-    profileImage.style.backgroundImage = `url(${data.avatar})`;
+    insertDataProfile(data);
   })
   .catch((err) => console.log('Что-то пошло не так: '+err));
 }
 
-function insertDataCards(){
+function initialDataCards(){
   getDataCards(autorizationConfig)
   .then((res) => {if(res.ok) return res.json()})
   .then((data) => {
@@ -186,7 +191,7 @@ function insertDataCards(){
 }
 
 function updateDataProfile(autorizationConfig, data){
-  fetch(`https://nomoreparties.co/v1/${autorizationConfig.cohort}/users/me`, {
+  fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/users/me`, {
     method: 'PATCH',
     headers: {
       authorization: autorizationConfig.token,
@@ -196,12 +201,43 @@ function updateDataProfile(autorizationConfig, data){
       name: data.name,
       about: data.about
     })
-  });
+  })
+  .then((res) => {if(res.ok) return res.json()})
+  .then((data) => insertDataProfile(data))
+  .catch((err) => console.log('Что-то пошло не так: '+err));
+
 }
 
-insertDataProfile(profileTitle, profileDescription, profileImage);
+function insertDataProfile(data){
+  profileTitle.textContent = data.name;
+  profileDescription.textContent = data.about;
+  profileImage.style.backgroundImage = `url(${data.avatar})`;
+  userId = data._id;
+}
 
-insertDataCards();
+function postNewCard(autorizationConfig, data){
+  fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/cards`, {
+    method: 'POST',
+    headers: {
+      authorization: autorizationConfig.token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: data.name,
+      link: data.link
+    })
+  })
+  .then((res) => {if(res.ok) return res.json()})
+  .then((data) => {
+    addCard(data.name, data.link, data.likes.length);
+    console.log(data);
+  })
+  .catch((err) => console.log('Что-то пошло не так: '+err));
+}
+
+initialDataProfile();
+
+initialDataCards();
 
 
 
