@@ -1,6 +1,6 @@
 import '../pages/index.css';
 import {initialCards} from './cards.js';
-import {createCard} from '../components/card.js';
+import {createCard, delCard} from '../components/card.js';
 import {openModal, closeModal, closeWithOverlay} from '../components/modal.js';
 import {clearValidation, enableValidation} from '../components/validation.js';
 
@@ -11,6 +11,9 @@ const buttonAdd = document.querySelector('.profile__add-button');
 const popupNewCard = document.querySelector('.popup_type_new-card');
 const popupViewImage = document.querySelector('.popup_type_image');
 const popupEditProfile = document.querySelector('.popup_type_edit');
+const popupConfirmDelCard = document.querySelector('.popup_type_del-card');
+const buttonCloseDelCard = popupConfirmDelCard.querySelector('.popup__close');
+const formConfirmDelCard = document.forms.del_card;
 const formEditProfile = document.forms.edit_profile;
 const buttonCloseEditProfile = popupEditProfile.querySelector('.popup__close');
 const formNewPlace = document.forms.new_place;
@@ -25,8 +28,9 @@ const inputNameProfile = formEditProfile.elements.profile_name;
 const inputDescriptionProfile = formEditProfile.elements.description;
 const inputNameCard = formNewPlace.elements.place_name;
 const inputLinkCard = formNewPlace.elements.link;
-let userId = '';
-
+let userId = '',
+    cardIdDel = '',
+    cardItemDel = '';
 const validationConfig = {
   formSelector: '.popup__form',
   inputSelector: '.popup__input',
@@ -39,13 +43,16 @@ const validationConfig = {
 buttonCloseEditProfile.addEventListener('click', () => closeModal(popupEditProfile));
 buttonCloseNewPlace.addEventListener('click', () => closeModal(popupNewCard));
 buttonCloseViewImage.addEventListener('click', () => closeModal(popupViewImage));
+buttonCloseDelCard.addEventListener('click', () => closeModal(popupConfirmDelCard));
 
 popupEditProfile.addEventListener('click', (evt) => closeWithOverlay(evt, popupEditProfile));
 popupNewCard.addEventListener('click', (evt) => closeWithOverlay(evt, popupNewCard));
 popupViewImage.addEventListener('click', (evt) => closeWithOverlay(evt, popupViewImage));
+popupConfirmDelCard.addEventListener('click', (evt) => closeWithOverlay(evt, popupConfirmDelCard));
 
 formEditProfile.addEventListener('submit', handleEditProfileFormSubmit);
 formNewPlace.addEventListener('submit', handleNewCardFormSubmit);
+formConfirmDelCard.addEventListener('submit', (evt) => confirmDel(evt));
 
 buttonEdit.addEventListener('click', () => openModal(popupEditProfile));
 buttonEdit.addEventListener('click', showDataInEditProfileModal);
@@ -63,8 +70,6 @@ function handleNewCardFormSubmit(evt){
   data.name = inputNameCard.value;
   data.link = inputLinkCard.value;
   postNewCard(autorizationConfig, data);
-  //createCard(cardTemplate, link.value, name.value, openImageModal)
-  //addCard(inputNameCard, inputLinkCard);
   evt.currentTarget.reset();
   clearValidation(formNewPlace, validationConfig);
   closeModal(popupNewCard);
@@ -99,7 +104,7 @@ function showDataInEditProfileModal(){
 */
 function showCards(data){
   data.forEach(element => {
-    cardList.append(createCard(cardTemplate, element.link, element.name, openImageModal, element.likes.length, userId, element.owner._id));
+    cardList.append(createCard(cardTemplate, element.link, element.name, openImageModal, element.likes.length, userId, element.owner._id, element._id, handleDeleteCardSubmit));
   });
 }
 
@@ -116,8 +121,8 @@ function openImageModal(evt){
 ** Функция добавления новой карточки addCard()
 ** Параметры: нет
 */
-function addCard(name, link, likes){
-  cardList.prepend(createCard(cardTemplate, link, name, openImageModal, likes));
+function addCard(name, link, likes, owner, cardId){
+  cardList.prepend(createCard(cardTemplate, link, name, openImageModal, likes, userId, owner._id, cardId, handleDeleteCardSubmit));
 }
 
 /*
@@ -229,17 +234,42 @@ function postNewCard(autorizationConfig, data){
   })
   .then((res) => {if(res.ok) return res.json()})
   .then((data) => {
-    addCard(data.name, data.link, data.likes.length);
+    addCard(data.name, data.link, data.likes.length, data.owner, data._id);
     console.log(data);
   })
   .catch((err) => console.log('Что-то пошло не так: '+err));
 }
 
+function deleteCard(autorizationConfig, cardId){
+  return fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/cards/${cardId}`, {
+    method: 'DELETE',
+    headers: {
+      authorization: autorizationConfig.token
+    }
+  })
+}
+
+function confirmDel(evt){
+  evt.preventDefault();
+  deleteCard(autorizationConfig, cardIdDel)
+    .then((res) => {
+      if(res.ok){
+        closeModal(popupConfirmDelCard);
+        delCard(cardItemDel);
+      }
+    })
+    .catch((err) => console.log('Что-то пошло не так: '+err));
+}
+
+function handleDeleteCardSubmit(cardId, cardItem){
+  cardIdDel = cardId;
+  cardItemDel = cardItem;
+  openModal(popupConfirmDelCard);
+}
+
 initialDataProfile();
 
 initialDataCards();
-
-
 
 // https://kartinki.pics/pics/uploads/posts/2022-07/1657156698_3-kartinkin-net-p-yenot-art-v-ochkakh-i-kofte-krasivo-3.jpg
 // https://kartinki.pics/pics/2320-enot-art-v-ochkah-i-kofte.html

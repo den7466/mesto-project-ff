@@ -5,7 +5,7 @@
 **            name - наименование карточки (так же используется в alt)
 **            openImageModal - функция открытия модального окна изображения
 */
-function createCard(template, link, name, openImageModal, likes, userId, ownerId){
+function createCard(template, link, name, openImageModal, likes, userId, ownerId, cardId, handleDeleteCardSubmit){
   const cardElement = template.querySelector('.card').cloneNode(true);
   const cardImage = cardElement.querySelector('.card__image');
   const deleteButton = cardElement.querySelector('.card__delete-button');
@@ -15,7 +15,7 @@ function createCard(template, link, name, openImageModal, likes, userId, ownerId
   cardElement.querySelector('.card__title').textContent = name;
   if(userId === ownerId){
     deleteButton.classList.add('card__delete-button_active');
-    deleteButton.addEventListener('click', () => delCard(cardElement));
+    deleteButton.addEventListener('click', () => handleDeleteCardSubmit(cardId, cardElement));
   }
   cardElement.querySelector('.card__like-button').addEventListener('click', likeCard);
   cardImage.addEventListener('click', openImageModal);
@@ -38,4 +38,4 @@ function delCard(cardItem){
   cardItem.remove();
 }
 
-export {createCard};
+export {createCard, delCard};
