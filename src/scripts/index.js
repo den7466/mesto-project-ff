@@ -12,7 +12,10 @@ const popupNewCard = document.querySelector('.popup_type_new-card');
 const popupViewImage = document.querySelector('.popup_type_image');
 const popupEditProfile = document.querySelector('.popup_type_edit');
 const popupConfirmDelCard = document.querySelector('.popup_type_del-card');
+const popupEditAvatar = document.querySelector('.popup_type_edit-avatar');
+const buttonCloseEditAvatar = popupEditAvatar.querySelector('.popup__close');
 const buttonCloseDelCard = popupConfirmDelCard.querySelector('.popup__close');
+const formEditAvatar = document.forms.edit_avatar;
 const formConfirmDelCard = document.forms.del_card;
 const formEditProfile = document.forms.edit_profile;
 const buttonCloseEditProfile = popupEditProfile.querySelector('.popup__close');
@@ -28,9 +31,7 @@ const inputNameProfile = formEditProfile.elements.profile_name;
 const inputDescriptionProfile = formEditProfile.elements.description;
 const inputNameCard = formNewPlace.elements.place_name;
 const inputLinkCard = formNewPlace.elements.link;
-let userId = '',
-    cardIdDel = '',
-    cardItemDel = '';
+const inputLinkAvatar = formEditAvatar.elements.link;
 const validationConfig = {
   formSelector: '.popup__form',
   inputSelector: '.popup__input',
@@ -39,6 +40,10 @@ const validationConfig = {
   inputErrorClass: 'popup__input_type_error',
   errorClass: 'popup__error_visible'
 };
+const isLikedCards = [];
+let userId = '',
+    cardIdDel = '',
+    cardItemDel = '';
 
 buttonCloseEditProfile.addEventListener('click', () => closeModal(popupEditProfile));
 buttonCloseNewPlace.addEventListener('click', () => closeModal(popupNewCard));
@@ -52,7 +57,7 @@ popupConfirmDelCard.addEventListener('click', (evt) => closeWithOverlay(evt, pop
 
 formEditProfile.addEventListener('submit', handleEditProfileFormSubmit);
 formNewPlace.addEventListener('submit', handleNewCardFormSubmit);
-formConfirmDelCard.addEventListener('submit', (evt) => confirmDel(evt));
+formConfirmDelCard.addEventListener('submit', (evt) => deleteCard(evt));
 
 buttonEdit.addEventListener('click', () => openModal(popupEditProfile));
 buttonEdit.addEventListener('click', showDataInEditProfileModal);
@@ -69,7 +74,9 @@ function handleNewCardFormSubmit(evt){
   const data = {};
   data.name = inputNameCard.value;
   data.link = inputLinkCard.value;
-  postNewCard(autorizationConfig, data);
+  postNewCard(autorizationConfig, '/cards', data)
+  .then((data) => addCard(data))
+  .catch((err) => console.log('Что-то пошло не так: '+err));
   evt.currentTarget.reset();
   clearValidation(formNewPlace, validationConfig);
   closeModal(popupNewCard);
@@ -84,8 +91,10 @@ function handleEditProfileFormSubmit(evt){
   const data = {};
   data.name = inputNameProfile.value;
   data.about = inputDescriptionProfile.value;
-  updateDataProfile(autorizationConfig, data);
-  clearValidation(formEditProfile, validationConfig)
+  updateDataProfile(autorizationConfig, '/users/me', data)
+  .then((data) => insertDataProfile(data))
+  .catch((err) => console.log('Что-то пошло не так: '+err));
+  clearValidation(formEditProfile, validationConfig);
   closeModal(popupEditProfile);
 }
 
@@ -102,9 +111,9 @@ function showDataInEditProfileModal(){
 ** Функция отображения карточек из объекта данных showCards()
 ** Параметры: data - объект данных карточек
 */
-function showCards(data){
+function insertDataCards(data){
   data.forEach(element => {
-    cardList.append(createCard(cardTemplate, element.link, element.name, openImageModal, element.likes.length, userId, element.owner._id, element._id, handleDeleteCardSubmit));
+    cardList.append(createCard(cardTemplate, element.link, element.name, element.likes, userId, element.owner._id, element._id, openImageModal, handleDeleteCardSubmit, handleToggleLike));
   });
 }
 
@@ -121,8 +130,8 @@ function openImageModal(evt){
 ** Функция добавления новой карточки addCard()
 ** Параметры: нет
 */
-function addCard(name, link, likes, owner, cardId){
-  cardList.prepend(createCard(cardTemplate, link, name, openImageModal, likes, userId, owner._id, cardId, handleDeleteCardSubmit));
+function addCard(data){
+  cardList.prepend(createCard(cardTemplate, data.link, data.name, data.likes, userId, data.owner._id, data._id, openImageModal, handleDeleteCardSubmit, handleToggleLike));
 }
 
 /*
@@ -156,61 +165,86 @@ enableValidation(validationConfig);
 const autorizationConfig = {
   token: '4beae149-dbca-4748-9357-2aff8b55b5f4',
   cohort: 'wff-cohort-8',
-  url: 'https://nomoreparties.co/v1'
+  baseUrl: 'https://nomoreparties.co/v1/'
 };
 
-function getDataProfile(autorizationConfig){
-  return fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/users/me`, {
+function getData(config, url){
+  return fetch(`${config.baseUrl}${config.cohort}${url}`, {
     headers: {
-      authorization: autorizationConfig.token
+      authorization: config.token
     }
-  })
+  });
 }
 
-function getDataCards(autorizationConfig){
-  return fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/cards`, {
-    headers: {
-      authorization: autorizationConfig.token
-    }
-  })
-}
-
-function initialDataProfile(){
-  getDataProfile(autorizationConfig)
-  .then((res) => {if(res.ok) return res.json()})
-  .then((data) => {
-    console.log(data);
-    insertDataProfile(data);
-  })
-  .catch((err) => console.log('Что-то пошло не так: '+err));
-}
-
-function initialDataCards(){
-  getDataCards(autorizationConfig)
-  .then((res) => {if(res.ok) return res.json()})
-  .then((data) => {
-    console.log(data);
-    showCards(data);
-  })
-  .catch((err) => console.log('Что-то пошло не так: '+err));
-}
-
-function updateDataProfile(autorizationConfig, data){
-  fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/users/me`, {
+function updateData(config, url, data){
+  return fetch(`${config.baseUrl}${config.cohort}${url}`, {
     method: 'PATCH',
     headers: {
-      authorization: autorizationConfig.token,
+      authorization: config.token,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      name: data.name,
-      about: data.about
-    })
-  })
-  .then((res) => {if(res.ok) return res.json()})
-  .then((data) => insertDataProfile(data))
-  .catch((err) => console.log('Что-то пошло не так: '+err));
+    body: JSON.stringify(data)
+  });
+}
 
+function postData(config, url, data){
+  return fetch(`${config.baseUrl}${config.cohort}${url}`, {
+    method: 'POST',
+    headers: {
+      authorization: config.token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+}
+
+function deleteData(config, url, id){
+  return fetch(`${config.baseUrl}${config.cohort}${url}${id}`, {
+    method: 'DELETE',
+    headers: {
+      authorization: config.token
+    }
+  });
+}
+
+function putData(config, url, id){
+  return fetch(`${config.baseUrl}${config.cohort}${url}${id}`, {
+    method: 'PUT',
+    headers: {
+      authorization: config.token
+    }
+  });
+}
+
+function handleResponse(response){
+  if(response.ok){
+    return response.json();
+  }
+}
+
+function handleDeleteCardSubmit(id, item){
+  cardIdDel = id;
+  cardItemDel = item;
+  openModal(popupConfirmDelCard);
+}
+
+function getDataProfile(config, url){
+  return getData(config, url)
+  .then(handleResponse);
+}
+
+function getDataCards(config, url){
+  return getData(config, url)
+  .then(handleResponse);
+}
+
+function initData(){
+  Promise.all([getDataProfile(autorizationConfig, '/users/me'), getDataCards(autorizationConfig, '/cards')])
+  .then(([resDataProfile, resDataCards]) => {
+    insertDataProfile(resDataProfile);
+    insertDataCards(resDataCards);
+  })
+  .catch((err) => console.log('Что-то пошло не так: '+err));
 }
 
 function insertDataProfile(data){
@@ -220,56 +254,88 @@ function insertDataProfile(data){
   userId = data._id;
 }
 
-function postNewCard(autorizationConfig, data){
-  fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/cards`, {
-    method: 'POST',
-    headers: {
-      authorization: autorizationConfig.token,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      name: data.name,
-      link: data.link
-    })
-  })
-  .then((res) => {if(res.ok) return res.json()})
-  .then((data) => {
-    addCard(data.name, data.link, data.likes.length, data.owner, data._id);
-    console.log(data);
+function updateDataProfile(config, url, data){
+  return updateData(config, url, data)
+  .then(handleResponse);
+}
+
+function postNewCard(config, url, data){
+  return postData(config, url, data)
+  .then(handleResponse);
+}
+
+function deleteCard(evt){
+  evt.preventDefault();
+  deleteData(autorizationConfig, '/cards/', cardIdDel)
+  .then((response) => {
+    if(response.ok){
+      closeModal(popupConfirmDelCard);
+      delCard(cardItemDel);
+    }
   })
   .catch((err) => console.log('Что-то пошло не так: '+err));
 }
 
-function deleteCard(autorizationConfig, cardId){
-  return fetch(`${autorizationConfig.url}/${autorizationConfig.cohort}/cards/${cardId}`, {
-    method: 'DELETE',
-    headers: {
-      authorization: autorizationConfig.token
+function addLike(config, url, id){
+  return putData(config, url, id)
+  .then(handleResponse);
+}
+
+function delLike(config, url, id){
+  return deleteData(config, url, id)
+  .then(handleResponse);
+}
+
+// TODO: сделать error функцию
+
+function handleToggleLike(evt, cardId, isLiked, counterElement){
+  const likeButton = evt.currentTarget;
+  if(!(cardId in isLikedCards)){
+    if(!isLiked){
+      addLike(autorizationConfig, '/cards/likes/', cardId)
+      .then((data) => {
+        likeButton.classList.add('card__like-button_is-active');
+        counterElement.textContent = data.likes.length;
+        isLikedCards[cardId] = true;
+      })
+      .catch((err) => console.log('Что-то пошло не так: '+err));
+    }else{
+      delLike(autorizationConfig, '/cards/likes/', cardId)
+      .then((data) => {
+        likeButton.classList.remove('card__like-button_is-active');
+        counterElement.textContent = data.likes.length;
+        isLikedCards[cardId] = false;
+      })
+      .catch((err) => console.log('Что-то пошло не так: '+err));
     }
-  })
+  }else{
+    if(!isLikedCards[cardId]){
+      addLike(autorizationConfig, '/cards/likes/', cardId)
+      .then((data) => {
+        likeButton.classList.add('card__like-button_is-active');
+        counterElement.textContent = data.likes.length;
+        isLikedCards[cardId] = true;
+      })
+      .catch((err) => console.log('Что-то пошло не так: '+err));
+    }else{
+      delLike(autorizationConfig, '/cards/likes/', cardId)
+      .then((data) => {
+        likeButton.classList.remove('card__like-button_is-active');
+        counterElement.textContent = data.likes.length;
+        isLikedCards[cardId] = false;
+      })
+      .catch((err) => console.log('Что-то пошло не так: '+err));
+    }
+  }
 }
 
-function confirmDel(evt){
-  evt.preventDefault();
-  deleteCard(autorizationConfig, cardIdDel)
-    .then((res) => {
-      if(res.ok){
-        closeModal(popupConfirmDelCard);
-        delCard(cardItemDel);
-      }
-    })
-    .catch((err) => console.log('Что-то пошло не так: '+err));
+function updateAvatar(){
+
 }
 
-function handleDeleteCardSubmit(cardId, cardItem){
-  cardIdDel = cardId;
-  cardItemDel = cardItem;
-  openModal(popupConfirmDelCard);
-}
+// *************************************************************************************************************
 
-initialDataProfile();
-
-initialDataCards();
+initData();
 
 // https://kartinki.pics/pics/uploads/posts/2022-07/1657156698_3-kartinkin-net-p-yenot-art-v-ochkakh-i-kofte-krasivo-3.jpg
 // https://kartinki.pics/pics/2320-enot-art-v-ochkah-i-kofte.html
