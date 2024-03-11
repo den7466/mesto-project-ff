@@ -1,7 +1,6 @@
 /*
 ** Функция открытия модального окна openModal()
-** Параметры: evt - объект эвент
-**            modal - объект модального окна
+** Параметры: modal - объект модального окна
 */
 function openModal(modal){
   modal.classList.add('popup_is-opened');
@@ -10,8 +9,7 @@ function openModal(modal){
 
 /*
 ** Функция закрытия модального окна closeModal()
-** Параметры: evt - объект эвент
-**            modal - объект модального окна
+** Параметры: modal - объект модального окна
 */
 function closeModal(modal){
   document.removeEventListener('keydown', closeWithEsc);

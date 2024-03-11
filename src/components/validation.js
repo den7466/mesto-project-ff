@@ -1,3 +1,11 @@
+/*
+** Функция отображения ошибки showInputError()
+** Параметры: formElement - элемент формы
+**            inputElement - элемент поля ввода
+**            inputErrorClass - класс отображения ошибки поля ввода
+**            errorClass - класс отображения ошибки
+**            errorMessage - текст ошибки
+*/
 function showInputError(formElement, inputElement, inputErrorClass, errorClass, errorMessage){
   const errorElement = formElement.querySelector(`.${inputElement.id}-error`);
   inputElement.classList.add(inputErrorClass);
@@ -5,6 +13,13 @@ function showInputError(formElement, inputElement, inputErrorClass, errorClass, 
   errorElement.classList.add(errorClass);
 }
 
+/*
+** Функция скрытия ошибки hideInputError()
+** Параметры: formElement - элемент формы
+**            inputElement - элемент поля ввода
+**            inputErrorClass - класс отображения ошибки поля ввода
+**            errorClass - класс отображения ошибки
+*/
 function hideInputError(formElement, inputElement, inputErrorClass, errorClass){
   const errorElement = formElement.querySelector(`.${inputElement.id}-error`);
   inputElement.classList.remove(inputErrorClass);
@@ -12,13 +27,19 @@ function hideInputError(formElement, inputElement, inputErrorClass, errorClass){
   errorElement.textContent = '';
 }
 
+/*
+** Функция-обработчик валидности полей checkInputValidity()
+** Параметры: formElement - элемент формы
+**            inputElement - элемент поля ввода
+**            inputErrorClass - класс отображения ошибки поля ввода
+**            errorClass - класс отображения ошибки
+*/
 function checkInputValidity(formElement, inputElement, inputErrorClass, errorClass){
   if(inputElement.validity.patternMismatch){
     inputElement.setCustomValidity(inputElement.dataset.errorMessage);
   }else{
     inputElement.setCustomValidity('');
   }
-
   if(!inputElement.validity.valid) {
     showInputError(formElement, inputElement, inputErrorClass, errorClass, inputElement.validationMessage);
   }else{
@@ -26,6 +47,15 @@ function checkInputValidity(formElement, inputElement, inputErrorClass, errorCla
   }
 }
 
+/*
+** Функция установки слушателя на поля ввода setEventListeners()
+** Параметры: formElement - элемент формы
+**            inputElement - элемент поля ввода
+**            submitButtonSelector - кнопка отправки формы
+**            inactiveButtonClass - класс неактивной кнопки
+**            inputErrorClass - класс отображения ошибки поля ввода
+**            errorClass - класс отображения ошибки
+*/
 function setEventListeners(formElement, inputElement, submitButtonSelector, inactiveButtonClass, inputErrorClass, errorClass){
   const inputList = Array.from(formElement.querySelectorAll(inputElement));
   const buttonElement = formElement.querySelector(submitButtonSelector);
@@ -38,12 +68,23 @@ function setEventListeners(formElement, inputElement, submitButtonSelector, inac
   });
 }
 
+/*
+** Функция проверки на валидность hasInvalidInput()
+** Параметры: inputList - массим полей ввода формы
+** Возвращает: true или false
+*/
 function hasInvalidInput(inputList){
   return inputList.some((inputElement) => {
     return !inputElement.validity.valid;
   });
 }
 
+/*
+** Функция активации-дезактивации кнопки отправки формы toggleButtonState()
+** Параметры: inputList - массим полей ввода формы
+**            buttonElement - элемент кнопки отправки формы
+**            inactiveButtonClass - класс неактивной кнопки
+*/
 function toggleButtonState(inputList, buttonElement, inactiveButtonClass){
   if(hasInvalidInput(inputList)){
     buttonElement.disabled = true;
@@ -54,6 +95,11 @@ function toggleButtonState(inputList, buttonElement, inactiveButtonClass){
   }
 }
 
+/*
+** Функция сброса ошибок валидации clearValidation()
+** Параметры: formElement - элемент формы
+**            validationConfig - объект концигурации валидации
+*/
 function clearValidation(formElement, validationConfig){
   const inputList = Array.from(formElement.querySelectorAll(validationConfig.inputSelector));
   const buttonElement = formElement.querySelector(validationConfig.submitButtonSelector);
@@ -64,8 +110,8 @@ function clearValidation(formElement, validationConfig){
 }
 
 /*
-** Функция
-** Параметры:
+** Функция включения валидации enableValidation()
+** Параметры: validationConfig - объект концигурации валидации
 */
 function enableValidation(validationConfig){
   const formList = Array.from(document.querySelectorAll(validationConfig.formSelector));

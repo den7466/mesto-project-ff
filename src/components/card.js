@@ -3,7 +3,14 @@
 ** Параметры: template - шаблон карточки
 **            link - ссылка на изображение
 **            name - наименование карточки (так же используется в alt)
+**            likes - массив лайков
+**            userId - id текушего пользователя
+**            ownerId - id создателя карточки
+**            cardId - id карточки
 **            openImageModal - функция открытия модального окна изображения
+**            openDeleteConfirmModal - функция открытия попапа подтверждения удаления карточки
+**            handleToggleLike- функция-обработчик постановки лайков
+** Возвращает: элемент карточки
 */
 function createCard(template, link, name, likes, userId, ownerId, cardId, openImageModal, openDeleteConfirmModal, handleToggleLike){
   const cardElement = template.querySelector('.card').cloneNode(true);
@@ -30,19 +37,11 @@ function createCard(template, link, name, likes, userId, ownerId, cardId, openIm
 }
 
 /*
-** Функция лайкнуть карточку likeCard()
-** Параметры: evt - объект эвент
-*/
-// function activeLike(likes, userId){
-
-// }
-
-/*
-** Функция удалить карточку delCard()
+** Функция удаления карточки из разметки removeCard()
 ** Параметры: cardItem - объект карточки
 */
-function delCard(cardItem){
+function removeCard(cardItem){
   cardItem.remove();
 }
 
-export {createCard, delCard};
+export {createCard, removeCard};
