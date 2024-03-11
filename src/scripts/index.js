@@ -1,5 +1,5 @@
 import '../pages/index.css';
-import {createCard, removeCard} from '../components/card.js';
+import {createCard, removeCard, addLikeStatus, removeLikeStatus, setLikeCounter} from '../components/card.js';
 import {openModal, closeModal, closeWithOverlay} from '../components/modal.js';
 import {clearValidation, enableValidation} from '../components/validation.js';
 import {getDataProfile, getDataCards, updateDataProfile, postCard, deleteCard, addLike, delLike, updateDataAvatar} from '../components/api.js';
@@ -45,12 +45,12 @@ const validationConfig = {
   inputErrorClass: 'popup__input_type_error',
   errorClass: 'popup__error_visible'
 };
-const autorizationConfig = {
-  token: '4beae149-dbca-4748-9357-2aff8b55b5f4',
-  cohort: 'wff-cohort-8',
-  baseUrl: 'https://nomoreparties.co/v1/'
+const cardHandlers = {
+  openImageModal,
+  openDeleteConfirmModal,
+  handleAddLike,
+  handleDelLike
 };
-const isLikedCards = [];
 let userId = '',
     cardIdDel = '',
     cardItemDel = '';
@@ -87,11 +87,11 @@ buttonEditAvatar.addEventListener('click', () => clearValidation(formEditAvatar,
 function handleNewCardFormSubmit(evt){
   evt.preventDefault();
   const form = evt.currentTarget;
-  dataLoading(buttonNewCardSubmit, true);
+  loadingData(buttonNewCardSubmit, true, 'Сохранение...', 'Сохранить');
   const data = {};
   data.name = inputNameCard.value;
   data.link = inputLinkCard.value;
-  postCard(autorizationConfig, '/cards', data)
+  postCard('/cards', data)
   .then((data) => {
     addCard(data);
     clearValidation(formNewPlace, validationConfig);
@@ -99,7 +99,7 @@ function handleNewCardFormSubmit(evt){
     form.reset();
   })
   .catch((err) => console.log(err))
-  .finally(() => dataLoading(buttonNewCardSubmit, false));
+  .finally(() => loadingData(buttonNewCardSubmit, false, 'Сохранение...', 'Сохранить'));
 }
 
 /*
@@ -109,11 +109,11 @@ function handleNewCardFormSubmit(evt){
 function handleEditProfileFormSubmit(evt){
   evt.preventDefault();
   const form = evt.currentTarget;
-  dataLoading(buttonEditProfileSubmit, true);
+  loadingData(buttonEditProfileSubmit, true, 'Сохранение...', 'Сохранить');
   const data = {};
   data.name = inputNameProfile.value;
   data.about = inputDescriptionProfile.value;
-  updateDataProfile(autorizationConfig, '/users/me', data)
+  updateDataProfile('/users/me', data)
   .then((data) => {
     insertDataProfile(data);
     clearValidation(formEditProfile, validationConfig);
@@ -121,7 +121,7 @@ function handleEditProfileFormSubmit(evt){
     form.reset();
   })
   .catch((err) => console.log(err))
-  .finally(() => dataLoading(buttonEditProfileSubmit, false));
+  .finally(() => loadingData(buttonEditProfileSubmit, false, 'Сохранение...', 'Сохранить'));
 }
 
 /*
@@ -131,10 +131,10 @@ function handleEditProfileFormSubmit(evt){
 function handleEditAvatarFormSubmit(evt){
   evt.preventDefault();
   const form = evt.currentTarget;
-  dataLoading(buttonEditAvatarSubmit, true);
+  loadingData(buttonEditAvatarSubmit, true, 'Сохранение...', 'Сохранить');
   const data = {};
   data.avatar = inputLinkAvatar.value;
-  updateDataAvatar(autorizationConfig, '/users/me/avatar', data)
+  updateDataAvatar('/users/me/avatar', data)
   .then((data) => {
     profileImage.style.backgroundImage = `url(${data.avatar})`;
     clearValidation(formEditAvatar, validationConfig);
@@ -142,7 +142,7 @@ function handleEditAvatarFormSubmit(evt){
     form.reset();
   })
   .catch((err) => console.log(err))
-  .finally(() => dataLoading(buttonEditAvatarSubmit, false));
+  .finally(() => loadingData(buttonEditAvatarSubmit, false, 'Сохранение...', 'Сохранить'));
 }
 
 /*
@@ -151,7 +151,7 @@ function handleEditAvatarFormSubmit(evt){
 */
 function showDataInEditProfileModal(){
   if(popupEditProfile.classList.contains('popup_is-opened'))
-   showProfile(inputNameProfile, inputDescriptionProfile, profileTitle, profileDescription)
+   showProfile();
 }
 
 /*
@@ -159,8 +159,9 @@ function showDataInEditProfileModal(){
 ** Параметры: data - объект данных карточек
 */
 function insertDataCards(data){
-  data.forEach(element => {
-    cardList.append(createCard(cardTemplate, element.link, element.name, element.likes, userId, element.owner._id, element._id, openImageModal, openDeleteConfirmModal, handleToggleLike));
+  data.forEach(dataElement => {
+    dataElement.userId = userId;
+    cardList.append(createCard(cardTemplate, dataElement, cardHandlers));
   });
 }
 
@@ -170,7 +171,7 @@ function insertDataCards(data){
 */
 function openImageModal(evt){
   openModal(popupViewImage);
-  showImage(imageViewImage, descriptionViewImage, evt.currentTarget);
+  showImage(evt.currentTarget);
 }
 
 /*
@@ -178,31 +179,27 @@ function openImageModal(evt){
 ** Параметры: data - объект данных карточек
 */
 function addCard(data){
-  cardList.prepend(createCard(cardTemplate, data.link, data.name, data.likes, userId, data.owner._id, data._id, openImageModal, openDeleteConfirmModal, handleToggleLike));
+  data.userId = userId;
+  cardList.prepend(createCard(cardTemplate, data, cardHandlers));
 }
 
 /*
 ** Функция отображения информации профиля showProfile()
-** Параметры: inputNameProfile - поле ввода имени
-**            inputDescriptionProfile - поле ввода описания
-**            profileTitle - елемент отображения имени в разметке
-**            profileDescription - елемент отображения описания в разметке
+** Параметры: нет
 */
-function showProfile(inputNameProfile, inputDescriptionProfile, profileTitle, profileDescription){
+function showProfile(){
   inputNameProfile.value = profileTitle.textContent;
   inputDescriptionProfile.value = profileDescription.textContent;
 }
 
 /*
 ** Функция отображения изображения showImage()
-** Параметры: imagePopup - объект изображения модального окна изображения
-**            descriptionPopup - объект описания модального окна изображения
-**            imageTarget - объект изображения из обработчика
+** Параметры: imageTarget - объект изображения из обработчика
 */
-function showImage(imagePopup, descriptionPopup, imageTarget){
-  imagePopup.src = imageTarget.src;
-  imagePopup.alt = imageTarget.alt;
-  descriptionPopup.textContent = imageTarget.alt;
+function showImage(imageTarget){
+  imageViewImage.src = imageTarget.src;
+  imageViewImage.alt = imageTarget.alt;
+  descriptionViewImage.textContent = imageTarget.alt;
 }
 
 /*
@@ -212,14 +209,14 @@ function showImage(imagePopup, descriptionPopup, imageTarget){
 function handleDeleteCardFormSubmit(evt){
   evt.preventDefault();
   const form = evt.currentTarget;
-  dataDeliteLoading(buttonDeleteCardSubmit, true);
-  deleteCard(autorizationConfig, '/cards/', cardIdDel)
+  loadingData(buttonDeleteCardSubmit, true, 'Удаление...', 'Да');
+  deleteCard('/cards/', cardIdDel)
   .then(() => {
     closeModal(popupConfirmDelCard);
     removeCard(cardItemDel);
   })
   .catch((err) => console.log(err))
-  .finally(() => dataDeliteLoading(buttonDeleteCardSubmit, false));
+  .finally(() => loadingData(buttonDeleteCardSubmit, false, 'Удаление...', 'Да'));
 }
 
 /*
@@ -238,7 +235,7 @@ function openDeleteConfirmModal(id, item){
 ** Параметры: нет
 */
 function initData(){
-  Promise.all([getDataProfile(autorizationConfig, '/users/me'), getDataCards(autorizationConfig, '/cards')])
+  Promise.all([getDataProfile('/users/me'), getDataCards('/cards')])
   .then(([resDataProfile, resDataCards]) => {
     insertDataProfile(resDataProfile);
     insertDataCards(resDataCards);
@@ -259,87 +256,46 @@ function insertDataProfile(data){
 
 /*
 ** Функция-обработчик добавления лайка handleAddLike()
-** Параметры: config - объект конфигурации работы с сервером
-              url - адрес запроса на добавление лайка
-              cardId - id карточки
+** Параметры: cardId - id карточки
               likeButton - элемент кнопки лайка
               counterElement - элемент счетчика лайков
 */
-function handleAddLike(config, url, cardId, likeButton, counterElement){
-  addLike(config, url, cardId)
+function handleAddLike(cardId, likeButton, counterElement){
+  addLike('/cards/likes/', cardId)
   .then((data) => {
-    likeButton.classList.add('card__like-button_is-active');
-    counterElement.textContent = data.likes.length;
-    isLikedCards[cardId] = true;
+    addLikeStatus(likeButton, cardId);
+    setLikeCounter(counterElement, data.likes);
   })
   .catch((err) => console.log(err));
 }
 
 /*
 ** Функция-обработчик удаления лайка handleDelLike()
-** Параметры: config - объект конфигурации работы с сервером
-              url - адрес запроса на удаление лайка
-              cardId - id карточки
+** Параметры: cardId - id карточки
               likeButton - элемент кнопки лайка
               counterElement - элемент счетчика лайков
 */
-function handleDelLike(config, url, cardId, likeButton, counterElement){
-  delLike(config, url, cardId)
+function handleDelLike(cardId, likeButton, counterElement){
+  delLike('/cards/likes/', cardId)
   .then((data) => {
-    likeButton.classList.remove('card__like-button_is-active');
-    counterElement.textContent = data.likes.length;
-    isLikedCards[cardId] = false;
+    removeLikeStatus(likeButton, cardId);
+    setLikeCounter(counterElement, data.likes);
   })
   .catch((err) => console.log(err));
 }
 
 /*
-** Функция-обработчик добавления-удаления лайка по условию handleToggleLike()
-** Параметры: evt - объект эвент
-**            cardId - id карточки
-**            isLiked - переменная была ли лайкнута карточка
-**            counterElement - элемент счетчика лайков
-*/
-function handleToggleLike(evt, cardId, isLiked, counterElement){
-  const likeButton = evt.currentTarget;
-  if(!(cardId in isLikedCards)){
-    if(!isLiked){
-      handleAddLike(autorizationConfig, '/cards/likes/', cardId, likeButton, counterElement);
-    }else{
-      handleDelLike(autorizationConfig, '/cards/likes/', cardId, likeButton, counterElement);
-    }
-  }else{
-    if(!isLikedCards[cardId]){
-      handleAddLike(autorizationConfig, '/cards/likes/', cardId, likeButton, counterElement);
-    }else{
-      handleDelLike(autorizationConfig, '/cards/likes/', cardId, likeButton, counterElement);
-    }
-  }
-}
-
-/*
-** Функция лоадер удаления карточки dataDeliteLoading()
-** Параметры: element - элемент кнопки удаления
-**            isDelete - переменная включен ли лоадер
-*/
-function dataDeliteLoading(element, isDelete){
-  if(isDelete){
-    element.textContent = 'Удаление...';
-  }else{
-    element.textContent = 'Да';
-  }
-}
-
-/*
-** Функция лоадер сохранения данных dataLoading()
+** Функция лоадер сохранения данных loadingData()
 ** Параметры: element - элемент кнопки сохранения
 **            isLoading - переменная включен ли лоадер
+**            textLoading - текст при отправке данных
+**            textDefault - текст по умолчанию
 */
-function dataLoading(element, isLoading){
+function loadingData(element, isLoading, textLoading, textDefault){
   if(isLoading){
-    element.textContent = 'Сохранение...';
+    element.textContent = textLoading;
   }else{
-    element.textContent = 'Сохранить';
+    element.textContent = textDefault;
   }
 }
 

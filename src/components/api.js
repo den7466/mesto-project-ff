@@ -1,10 +1,15 @@
+const config = {
+  token: '4beae149-dbca-4748-9357-2aff8b55b5f4',
+  cohort: 'wff-cohort-8',
+  baseUrl: 'https://nomoreparties.co/v1/'
+};
+
 /*
 ** Функция получения данных с сервера getData()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса
+** Параметры: url - адрес запроса
 ** Возвращает: promise
 */
-function getData(config, url){
+function getData(url){
   return fetch(`${config.baseUrl}${config.cohort}${url}`, {
     headers: {
       authorization: config.token
@@ -14,12 +19,11 @@ function getData(config, url){
 
 /*
 ** Функция обновления данных на сервере updateData()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса
+** Параметры: url - адрес запроса
 **            data - объект с данными
 ** Возвращает: promise
 */
-function updateData(config, url, data){
+function updateData(url, data){
   return fetch(`${config.baseUrl}${config.cohort}${url}`, {
     method: 'PATCH',
     headers: {
@@ -32,12 +36,11 @@ function updateData(config, url, data){
 
 /*
 ** Функция добавления данных на сервер postData()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса
+** Параметры: url - адрес запроса
 **            data - объект с данными
 ** Возвращает: promise
 */
-function postData(config, url, data){
+function postData(url, data){
   return fetch(`${config.baseUrl}${config.cohort}${url}`, {
     method: 'POST',
     headers: {
@@ -50,12 +53,11 @@ function postData(config, url, data){
 
 /*
 ** Функция удаления данных с сервера deleteData()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса
+** Параметры: url - адрес запроса
 **            id - id элемента
 ** Возвращает: promise
 */
-function deleteData(config, url, id){
+function deleteData(url, id){
   return fetch(`${config.baseUrl}${config.cohort}${url}${id}`, {
     method: 'DELETE',
     headers: {
@@ -66,12 +68,11 @@ function deleteData(config, url, id){
 
 /*
 ** Функция перезаписи данных на сервере putData()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса
+** Параметры: url - адрес запроса
 **            id - id элемента
 ** Возвращает: promise
 */
-function putData(config, url, id){
+function putData(url, id){
   return fetch(`${config.baseUrl}${config.cohort}${url}${id}`, {
     method: 'PUT',
     headers: {
@@ -82,95 +83,87 @@ function putData(config, url, id){
 
 /*
 ** Функция запроса данных профиля с сервера getDataProfile()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса данных профиля
+** Параметры: url - адрес запроса данных профиля
 ** Возвращает: promise
 */
-function getDataProfile(config, url){
-  return getData(config, url)
+function getDataProfile(url){
+  return getData(url)
   .then(handleResponse);
 }
 
 /*
 ** Функция запроса данных карточек с сервера getDataCards()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса данных карточек
+** Параметры: url - адрес запроса данных карточек
 ** Возвращает: promise
 */
-function getDataCards(config, url){
-  return getData(config, url)
+function getDataCards(url){
+  return getData(url)
   .then(handleResponse);
 }
 
 /*
 ** Функция обновления данных профиля на сервере updateDataProfile()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса на обновление данных профиля
+** Параметры: url - адрес запроса на обновление данных профиля
 **            data - объект с данными профиля для обновления {name: 'name', about: 'job'}
 ** Возвращает: promise
 */
-function updateDataProfile(config, url, data){
-  return updateData(config, url, data)
+function updateDataProfile(url, data){
+  return updateData(url, data)
   .then(handleResponse);
 }
 
 /*
 ** Функция добавления карточки на сервер postCard()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса на добавление новой карточки
+** Параметры: url - адрес запроса на добавление новой карточки
 **            data - объект с данными карточки для добавления {name: 'name', link: 'url'}
 ** Возвращает: promise
 */
-function postCard(config, url, data){
-  return postData(config, url, data)
+function postCard(url, data){
+  return postData(url, data)
   .then(handleResponse);
 }
 
 /*
 ** Функция удаления карточки с сервера deleteCard()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса на удаление карточки
+** Параметры: url - адрес запроса на удаление карточки
 **            cardId - id карточки
 ** Возвращает: promise
 */
-function deleteCard(config, url, cardId){
-  return deleteData(config, url, cardId)
+function deleteCard(url, cardId){
+  return deleteData(url, cardId)
   .then(handleResponse);
 }
 
 /*
 ** Функция добавления лайка addLike()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса добаление лайка
+** Параметры: url - адрес запроса добаление лайка
 **            id - id карточки
 ** Возвращает: promise
 */
-function addLike(config, url, id){
-  return putData(config, url, id)
+function addLike(url, id){
+  return putData(url, id)
   .then(handleResponse);
 }
 
 /*
 ** Функция удаления лайка delLike()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса добаление лайка
+** Параметры: url - адрес запроса добаление лайка
 **            id - id карточки
 ** Возвращает: promise
 */
-function delLike(config, url, id){
-  return deleteData(config, url, id)
+function delLike(url, id){
+  return deleteData(url, id)
   .then(handleResponse);
 }
 
 /*
 ** Функция обновления аватара на сервере updateDataAvatar()
-** Параметры: config - объект конфигурации работы с сервером
-**            url - адрес запроса на обновление аватара
+** Параметры: url - адрес запроса на обновление аватара
 **            data - объект с данными аватара {avatar: 'url'}
 ** Возвращает: promise
 */
-function updateDataAvatar(config, url, data){
-  return updateData(config, url, data)
+function updateDataAvatar(url, data){
+  return updateData(url, data)
   .then(handleResponse);
 }
 
